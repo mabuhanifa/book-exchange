@@ -1,12 +1,10 @@
 "use client";
 
+import axios from "axios"; // Use axios for client-side requests
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import ErrorMessage from "./ui/ErrorMessage";
 // Import Shadcn Form, Input, Textarea, Select, Button later
-// import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-// import { Input } from '@/components/ui/input';
-// import { Textarea } from '@/components/ui/textarea';
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-// import { Button } from '@/components/ui/button';
 
 interface BookFormData {
   title: string;
@@ -24,17 +22,10 @@ interface BookFormData {
 
 interface BookFormProps {
   initialData?: BookFormData; // For editing
-  onSubmit: (data: BookFormData) => void;
-  loading: boolean;
-  error: string | null;
 }
 
-export default function BookForm({
-  initialData,
-  onSubmit,
-  loading,
-  error,
-}: BookFormProps) {
+export default function BookForm({ initialData }: BookFormProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState<BookFormData>(
     initialData || {
       title: "",
@@ -50,6 +41,8 @@ export default function BookForm({
       availability: "available",
     }
   );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialData) {
@@ -70,9 +63,61 @@ export default function BookForm({
     setFormData((prev) => ({ ...prev, images: e.target.files }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    setLoading(true);
+    setError(null);
+
+    // Prepare data for submission
+    const dataToSubmit = new FormData();
+    dataToSubmit.append("title", formData.title);
+    dataToSubmit.append("author", formData.author);
+    dataToSubmit.append("description", formData.description);
+    dataToSubmit.append("condition", formData.condition);
+    dataToSubmit.append("type", formData.type);
+    if (formData.type === "sell" && formData.price !== undefined)
+      dataToSubmit.append("price", formData.price.toString());
+    if (formData.type === "exchange" && formData.exchangeFor)
+      dataToSubmit.append("exchangeFor", formData.exchangeFor);
+    if (formData.type === "borrow" && formData.borrowDuration)
+      dataToSubmit.append("borrowDuration", formData.borrowDuration);
+    dataToSubmit.append("availability", formData.availability);
+
+    // Append new images
+    if (formData.images) {
+      for (let i = 0; i < formData.images.length; i++) {
+        dataToSubmit.append("images", formData.images[i]);
+      }
+    }
+    // For editing, you might need to send which existing images to keep/remove
+    // dataToSubmit.append('existingImages', JSON.stringify(formData.existingImages));
+
+    const url = initialData
+      ? `/api/proxy/books/${initialData.id}`
+      : "/api/proxy/books";
+    const method = initialData ? "put" : "post";
+
+    try {
+      // Use axios to call the Next.js proxy API route
+      const response = await axios({
+        method,
+        url,
+        data: dataToSubmit,
+        // Note: axios automatically sets Content-Type for FormData
+        // You might need an interceptor here or in a wrapper to handle 401s for token refresh
+      });
+
+      console.log("Book saved successfully:", response.data);
+      // Redirect on success
+      router.push(`/books/${response.data.id}`); // Assuming the response includes the new/updated book ID
+    } catch (err: any) {
+      console.error("Failed to save book:", err);
+      setError(
+        err.response?.data?.message || err.message || "An error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -223,7 +268,7 @@ export default function BookForm({
         </select>
       </div>
 
-      {error && <div className="text-red-500">{error}</div>}
+      <ErrorMessage error={error} />
       {/* Shadcn Button */}
       <button type="submit" disabled={loading}>
         {loading
