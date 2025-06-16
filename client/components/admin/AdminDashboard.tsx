@@ -1,3 +1,6 @@
+import ErrorMessage from "../ui/ErrorMessage";
+import LoadingSpinner from "../ui/LoadingSpinner";
+
 interface AdminStats {
   totalUsers: number;
   totalBooks: number;
@@ -17,8 +20,8 @@ export default function AdminDashboard({
   loading,
   error,
 }: AdminDashboardProps) {
-  if (loading) return <div>Loading admin dashboard...</div>;
-  if (error) return <div>Error loading dashboard: {error}</div>;
+  if (loading) return <LoadingSpinner isLoading={true} />;
+  if (error) return <ErrorMessage error={error} />;
 
   return (
     <div>

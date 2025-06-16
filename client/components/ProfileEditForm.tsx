@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-// Import Shadcn Form, Input, Textarea, Select, Button later
+import ErrorMessage from "./ui/ErrorMessage";
+// Import Shadcn Form components
+// import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+// Import react-hook-form and zod later
 
 interface ProfileFormData {
   name: string;
@@ -30,11 +36,13 @@ export default function ProfileEditForm({
   }, [initialData]);
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: keyof ProfileFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -44,12 +52,11 @@ export default function ProfileEditForm({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      {/* Shadcn Form */}
+    // Wrap with Shadcn Form component later
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label htmlFor="name">Name</label>
-        {/* Shadcn Input */}
-        <input
+        <Input
           id="name"
           name="name"
           value={formData.name}
@@ -59,8 +66,8 @@ export default function ProfileEditForm({
       </div>
       <div>
         <label htmlFor="area">Area</label>
-        {/* Shadcn Input */}
-        <input
+        {/* Assuming area might become a select later, keeping as input for now */}
+        <Input
           id="area"
           name="area"
           value={formData.area}
@@ -70,8 +77,7 @@ export default function ProfileEditForm({
       </div>
       <div>
         <label htmlFor="bio">Bio</label>
-        {/* Shadcn Textarea */}
-        <textarea
+        <Textarea
           id="bio"
           name="bio"
           value={formData.bio || ""}
@@ -79,11 +85,10 @@ export default function ProfileEditForm({
         />
       </div>
 
-      {error && <div className="text-red-500">{error}</div>}
-      {/* Shadcn Button */}
-      <button type="submit" disabled={loading}>
+      <ErrorMessage error={error} />
+      <Button type="submit" disabled={loading}>
         {loading ? "Saving..." : "Update Profile"}
-      </button>
+      </Button>
     </form>
   );
 }

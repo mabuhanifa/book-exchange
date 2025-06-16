@@ -1,8 +1,18 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import React, { useState } from "react";
-// Import Shadcn Form, Textarea, Select, Button later
+import ErrorMessage from "../ui/ErrorMessage";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 interface Dispute {
   id: string;
@@ -43,8 +53,8 @@ export default function AdminDisputeDetails({
   const [resolution, setResolution] = useState("");
   const [outcome, setOutcome] = useState(""); // e.g., 'favor_initiator', 'favor_receiver', 'mutual', 'cancelled'
 
-  if (loading) return <div>Loading dispute details...</div>;
-  if (error) return <div>Error loading dispute details: {error}</div>;
+  if (loading) return <LoadingSpinner isLoading={true} />;
+  if (error) return <ErrorMessage error={error} />;
   if (!dispute) return <div>Dispute not found.</div>;
 
   const isResolvable =
@@ -60,88 +70,124 @@ export default function AdminDisputeDetails({
   };
 
   return (
-    <div>
+    <div className="space-y-4">
       <h1>Dispute Details: {dispute.id}</h1>
-      <p>Status: {dispute.status}</p>
       <p>
-        Raised By:
-        <Link href={`/admin/users/${dispute.raisedBy.id}`}>
+        <strong>Status:</strong> {dispute.status}
+      </p>
+      <p>
+        <strong>Raised By:</strong>
+        <Link
+          href={`/admin/users/${dispute.raisedBy.id}`}
+          className="text-blue-600 ml-1"
+        >
           {dispute.raisedBy.name}
         </Link>
       </p>
       <p>
-        Regarding Transaction:
+        <strong>Regarding Transaction:</strong>
         <Link
           href={`/transactions/${dispute.transaction.type}/${dispute.transaction.id}`}
+          className="text-blue-600 ml-1"
         >
           {dispute.transaction.bookTitle} ({dispute.transaction.type})
         </Link>
       </p>
       <p>
-        Participants:
-        <Link href={`/admin/users/${dispute.transaction.initiator.id}`}>
+        <strong>Participants:</strong>
+        <Link
+          href={`/admin/users/${dispute.transaction.initiator.id}`}
+          className="text-blue-600 ml-1"
+        >
           {dispute.transaction.initiator.name}
         </Link>
         {" vs "}
-        <Link href={`/admin/users/${dispute.transaction.receiver.id}`}>
+        <Link
+          href={`/admin/users/${dispute.transaction.receiver.id}`}
+          className="text-blue-600 ml-1"
+        >
           {dispute.transaction.receiver.name}
         </Link>
       </p>
-      <p>Reason: {dispute.reason}</p>
-      {dispute.details && <p>Details: {dispute.details}</p>}
-      <p>Created At: {new Date(dispute.createdAt).toLocaleString()}</p>
+      <p>
+        <strong>Reason:</strong> {dispute.reason}
+      </p>
+      {dispute.details && (
+        <p>
+          <strong>Details:</strong> {dispute.details}
+        </p>
+      )}
+      <p>
+        <strong>Created At:</strong>{" "}
+        {new Date(dispute.createdAt).toLocaleString()}
+      </p>
 
       {dispute.status !== "open" && (
         <div>
           <h2>Resolution</h2>
-          <p>Outcome: {dispute.status}</p> {/* Display resolved status */}
-          <p>Notes: {dispute.resolution}</p>
-          {dispute.resolvedBy && <p>Resolved By: {dispute.resolvedBy.name}</p>}
+          <p>
+            <strong>Outcome:</strong> {dispute.status}
+          </p>
+          <p>
+            <strong>Notes:</strong> {dispute.resolution}
+          </p>
+          {dispute.resolvedBy && (
+            <p>
+              <strong>Resolved By:</strong> {dispute.resolvedBy.name}
+            </p>
+          )}
           {dispute.resolvedAt && (
-            <p>Resolved At: {new Date(dispute.resolvedAt).toLocaleString()}</p>
+            <p>
+              <strong>Resolved At:</strong>{" "}
+              {new Date(dispute.resolvedAt).toLocaleString()}
+            </p>
           )}
         </div>
       )}
 
       {isResolvable && (
-        <div>
+        <div className="space-y-4">
           <h2>Resolve Dispute</h2>
-          <form onSubmit={handleSubmitResolution}>
-            {/* Shadcn Form */}
+          {/* Wrap with Shadcn Form component later */}
+          <form onSubmit={handleSubmitResolution} className="space-y-4">
             <div>
               <label htmlFor="outcome">Outcome</label>
               {/* Shadcn Select */}
-              <select
-                id="outcome"
+              <Select
                 value={outcome}
-                onChange={(e) => setOutcome(e.target.value)}
+                onValueChange={setOutcome}
                 required
+                defaultValue=""
               >
-                <option value="">Select Outcome</option>
-                <option value="favor_initiator">Favor Initiator</option>
-                <option value="favor_receiver">Favor Receiver</option>
-                <option value="mutual">Mutual Agreement</option>
-                <option value="cancelled">Transaction Cancelled</option>
-                {/* Add other outcomes */}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Outcome" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="favor_initiator">
+                    Favor Initiator
+                  </SelectItem>
+                  <SelectItem value="favor_receiver">Favor Receiver</SelectItem>
+                  <SelectItem value="mutual">Mutual Agreement</SelectItem>
+                  <SelectItem value="cancelled">
+                    Transaction Cancelled
+                  </SelectItem>
+                  {/* Add other outcomes */}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label htmlFor="resolution">Resolution Notes</label>
-              {/* Shadcn Textarea */}
-              <textarea
+              <Textarea
                 id="resolution"
                 value={resolution}
                 onChange={(e) => setResolution(e.target.value)}
                 required
               />
             </div>
-            {resolutionError && (
-              <div className="text-red-500">{resolutionError}</div>
-            )}
-            {/* Shadcn Button */}
-            <button type="submit" disabled={resolving}>
+            <ErrorMessage error={resolutionError} />
+            <Button type="submit" disabled={resolving}>
               {resolving ? "Submitting..." : "Submit Resolution"}
-            </button>
+            </Button>
           </form>
         </div>
       )}

@@ -1,18 +1,21 @@
-// Import Shadcn Button later
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import ErrorMessage from "./ui/ErrorMessage";
+import LoadingSpinner from "./ui/LoadingSpinner";
 // Import Next.js Image later
 
 interface Book {
   id: string;
   title: string;
   author: string;
-  description: string; // Added description for details
+  description: string;
   condition: string;
   type: "exchange" | "sell" | "borrow";
   price?: number;
   exchangeFor?: string;
   borrowDuration?: string;
-  images?: string[]; // Added multiple images for details
-  owner?: { id: string; name: string; area: string }; // Added owner id
+  images?: string[];
+  owner?: { id: string; name: string; area: string };
   availability: string;
 }
 
@@ -29,51 +32,68 @@ export default function BookDetails({
   error,
   currentUser,
 }: BookDetailsProps) {
-  if (loading) return <div>Loading book details...</div>;
-  if (error) return <div>Error loading book details: {error}</div>;
+  if (loading) return <LoadingSpinner isLoading={true} />;
+  if (error) return <ErrorMessage error={error} />;
   if (!book) return <div>Book not found.</div>;
 
   const isOwner = currentUser && currentUser.id === book.owner?.id;
 
   return (
-    <div>
+    <div className="space-y-4">
       <h1>{book.title}</h1>
-      <p>by {book.author}</p>
+      <p className="text-lg text-gray-700">by {book.author}</p>
       {/* Images */}
-      {book.images?.map((img, index) => (
-        // Use Next.js Image
-        <img
-          key={index}
-          src={img}
-          alt={`${book.title} image ${index + 1}`}
-          className="w-64 h-64 object-cover mr-2"
-        />
-      ))}
-      <p>Description: {book.description}</p>
-      <p>Condition: {book.condition}</p>
-      <p>Type: {book.type}</p>
-      {book.type === "sell" && <p>Price: ${book.price}</p>}
-      {book.type === "exchange" && <p>Exchange For: {book.exchangeFor}</p>}
-      {book.type === "borrow" && <p>Duration: {book.borrowDuration}</p>}
+      <div className="flex space-x-2 overflow-x-auto">
+        {book.images?.map((img, index) => (
+          // Use Next.js Image
+          <img
+            key={index}
+            src={img}
+            alt={`${book.title} image ${index + 1}`}
+            className="w-64 h-64 object-cover rounded-md"
+          />
+        ))}
+      </div>
+      <p>{book.description}</p>
       <p>
-        Owner: {book.owner?.name} ({book.owner?.area})
+        <strong>Condition:</strong> {book.condition}
       </p>
-      <p>Availability: {book.availability}</p>
+      <p>
+        <strong>Type:</strong> {book.type}
+      </p>
+      {book.type === "sell" && (
+        <p>
+          <strong>Price:</strong> ${book.price}
+        </p>
+      )}
+      {book.type === "exchange" && (
+        <p>
+          <strong>Exchange For:</strong> {book.exchangeFor}
+        </p>
+      )}
+      {book.type === "borrow" && (
+        <p>
+          <strong>Duration:</strong> {book.borrowDuration}
+        </p>
+      )}
+      <p>
+        <strong>Owner:</strong> {book.owner?.name} ({book.owner?.area})
+      </p>
+      <p>
+        <strong>Availability:</strong> {book.availability}
+      </p>
 
       {!isOwner && currentUser && (
-        <div>
+        <div className="flex space-x-4">
           {/* TransactionRequestButton */}
-          {/* Shadcn Button */}
-          <button>Request Transaction</button>
+          <Button>Request Transaction</Button>
           {/* ChatButton */}
-          {/* Shadcn Button */}
-          <button>Chat with Owner</button>
+          <Button variant="secondary">Chat with Owner</Button>
         </div>
       )}
       {isOwner && (
         <Link href={`/books/${book.id}/edit`}>
-          {/* Shadcn Button */}
-          <button>Edit Listing</button>
+          <Button>Edit Listing</Button>
         </Link>
       )}
     </div>

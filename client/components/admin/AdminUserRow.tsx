@@ -1,13 +1,13 @@
-import React from 'react';
-import Link from 'next/link';
-// Import Shadcn Button later
+import { Button } from "@/components/ui/button";
+import { TableCell, TableRow } from "@/components/ui/table";
+import Link from "next/link";
 
 interface User {
   id: string;
   name: string;
   phoneNumber: string;
-  role: 'user' | 'admin';
-  status: 'active' | 'suspended';
+  role: "user" | "admin";
+  status: "active" | "suspended";
   createdAt: string;
   // Add other user fields
 }
@@ -18,29 +18,41 @@ interface AdminUserRowProps {
   onRestore?: (userId: string) => void;
 }
 
-export default function AdminUserRow({ user, onSuspend, onRestore }: AdminUserRowProps) {
+export default function AdminUserRow({
+  user,
+  onSuspend,
+  onRestore,
+}: AdminUserRowProps) {
   return (
-    <tr>
-      <td>
-        <Link href={`/admin/users/${user.id}`}>
-          {user.name}
-        </Link>
-      </td>
-      <td>{user.phoneNumber}</td>
-      <td>{user.role}</td>
-      <td>{user.status}</td>
-      <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-      <td>
-        {user.status === 'active' && onSuspend && (
-          {/* Shadcn Button */}
-          <button onClick={() => onSuspend(user.id)}>Suspend</button>
+    <TableRow>
+      <TableCell>
+        <Link href={`/admin/users/${user.id}`}>{user.name}</Link>
+      </TableCell>
+      <TableCell>{user.phoneNumber}</TableCell>
+      <TableCell>{user.role}</TableCell>
+      <TableCell>{user.status}</TableCell>
+      <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+      <TableCell>
+        {user.status === "active" && onSuspend && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => onSuspend(user.id)}
+          >
+            Suspend
+          </Button>
         )}
-        {user.status === 'suspended' && onRestore && (
-          {/* Shadcn Button */}
-          <button onClick={() => onRestore(user.id)}>Restore</button>
+        {user.status === "suspended" && onRestore && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => onRestore(user.id)}
+          >
+            Restore
+          </Button>
         )}
         {/* Add other actions like Edit Role */}
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }

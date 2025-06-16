@@ -1,9 +1,8 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import React, { useState } from "react";
-// Import Shadcn Input, Button later
-// import { Input } from '@/components/ui/input';
-// import { Button } from '@/components/ui/button';
 
 interface MessageInputProps {
   onSendMessage: (text: string) => void;
@@ -26,8 +25,7 @@ export default function MessageInput({
 
   return (
     <form onSubmit={handleSubmit} className="flex space-x-2">
-      {/* Shadcn Input */}
-      <input
+      <Input
         type="text"
         placeholder="Type a message..."
         value={text}
@@ -35,10 +33,9 @@ export default function MessageInput({
         disabled={sending}
         className="flex-grow"
       />
-      {/* Shadcn Button */}
-      <button type="submit" disabled={!text.trim() || sending}>
+      <Button type="submit" disabled={!text.trim() || sending}>
         {sending ? "Sending..." : "Send"}
-      </button>
+      </Button>
     </form>
   );
 }

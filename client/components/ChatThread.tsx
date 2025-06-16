@@ -3,7 +3,8 @@
 import { useEffect, useRef } from "react";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
-// Import components for loading more messages later
+import ErrorMessage from "./ui/ErrorMessage";
+import LoadingSpinner from "./ui/LoadingSpinner";
 
 interface Message {
   id: string;
@@ -42,21 +43,19 @@ export default function ChatThread({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]); // Scroll to bottom when messages change
+  }, [messages]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-200px)]">
-      {" "}
-      {/* Example height */}
       <h2>Chat</h2>
-      {error && <div className="text-red-500">{error}</div>}
+      <ErrorMessage error={error} />
       {/* Message list container */}
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
         {/* Button/indicator to load more messages */}
         {onLoadMoreMessages && (
           <button onClick={onLoadMoreMessages}>Load More</button>
         )}
-        {loading && <div>Loading messages...</div>}
+        <LoadingSpinner isLoading={loading} />
         {messages.map((message) => (
           <MessageBubble
             key={message.id}
@@ -64,7 +63,7 @@ export default function ChatThread({
             isCurrentUser={message.sender.id === currentUser.id}
           />
         ))}
-        <div ref={messagesEndRef} /> {/* Scroll target */}
+        <div ref={messagesEndRef} />
       </div>
       {/* Message input */}
       <div className="p-4 border-t">

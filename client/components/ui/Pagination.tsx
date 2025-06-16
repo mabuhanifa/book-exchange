@@ -1,7 +1,13 @@
 "use client";
 
-// Import Shadcn Pagination components later
-// import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface PaginationProps {
   currentPage: number;
@@ -14,44 +20,55 @@ export default function Pagination({
   totalPages,
   onPageChange,
 }: PaginationProps) {
-  // Basic pagination logic
+  // Simple pagination logic (can be enhanced for large number of pages)
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
-    <nav className="flex justify-center mt-4">
-      {/* Shadcn Pagination */}
-      <ul className="flex space-x-1">
-        {/* Shadcn PaginationPrevious */}
-        <li>
-          <button
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage <= 1}
-          >
-            Previous
-          </button>
-        </li>
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onPageChange(currentPage - 1);
+            }}
+            isActive={currentPage > 1} // Use isActive for styling disabled state
+          />
+        </PaginationItem>
+
+        {/* Render page numbers (simplified) */}
         {pages.map((page) => (
-          // Shadcn PaginationItem, PaginationLink
-          <li key={page}>
-            <button
-              onClick={() => onPageChange(page)}
-              disabled={currentPage === page}
-              className={currentPage === page ? "font-bold" : ""}
+          <PaginationItem key={page}>
+            <PaginationLink
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                onPageChange(page);
+              }}
+              isActive={currentPage === page}
             >
               {page}
-            </button>
-          </li>
+            </PaginationLink>
+          </PaginationItem>
         ))}
-        {/* Shadcn PaginationNext */}
-        <li>
-          <button
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages}
-          >
-            Next
-          </button>
-        </li>
-      </ul>
-    </nav>
+
+        {/* Add ellipsis for large page counts */}
+        {/* <PaginationItem>
+          <PaginationEllipsis />
+        </PaginationItem> */}
+
+        <PaginationItem>
+          <PaginationNext
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onPageChange(currentPage + 1);
+            }}
+            isActive={currentPage < totalPages} // Use isActive for styling disabled state
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
   );
 }

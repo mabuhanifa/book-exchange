@@ -1,8 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-// Import Shadcn Form, Textarea, Button later
+import ErrorMessage from "./ui/ErrorMessage";
+// Import Shadcn Form components
+// import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 // Import Star rating input component later
+// Import react-hook-form and zod later
 
 interface Transaction {
   id: string;
@@ -43,7 +48,7 @@ export default function ReviewForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) {
-      alert("Please provide a rating.");
+      alert("Please provide a rating."); // Replace with better UI feedback
       return;
     }
     onSubmit({
@@ -55,7 +60,8 @@ export default function ReviewForm({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    // Wrap with Shadcn Form component later
+    <form onSubmit={handleSubmit} className="space-y-4">
       <h2>Leave a Review for {reviewee.name}</h2>
       <div>
         <label>Rating</label>
@@ -77,8 +83,7 @@ export default function ReviewForm({
       </div>
       <div>
         <label htmlFor="comment">Comment</label>
-        {/* Shadcn Textarea */}
-        <textarea
+        <Textarea
           id="comment"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
@@ -86,11 +91,10 @@ export default function ReviewForm({
         />
       </div>
 
-      {error && <div className="text-red-500">{error}</div>}
-      {/* Shadcn Button */}
-      <button type="submit" disabled={loading}>
+      <ErrorMessage error={error} />
+      <Button type="submit" disabled={loading}>
         {loading ? "Submitting..." : "Submit Review"}
-      </button>
+      </Button>
     </form>
   );
 }

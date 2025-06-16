@@ -1,10 +1,38 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import axios from "axios"; // Use axios for client-side requests
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import ErrorMessage from "./ui/ErrorMessage";
-// Import Shadcn Form, Input, Textarea, Select, Button later
+
+// Import react-hook-form and zod for validation later
+// import { useForm } from 'react-hook-form';
+// import { zodResolver } from '@hookform/resolvers/zod';
+// import * as z from 'zod';
+
+// Define a basic schema (will be used with Zod later)
+// const formSchema = z.object({
+//   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
+//   author: z.string().min(2, { message: "Author must be at least 2 characters." }),
+//   description: z.string().min(10, { message: "Description must be at least 10 characters." }),
+//   condition: z.enum(["new", "like new", "good", "fair", "poor"]),
+//   type: z.enum(["exchange", "sell", "borrow"]),
+//   price: z.number().optional(), // Add validation based on type
+//   exchangeFor: z.string().optional(), // Add validation based on type
+//   borrowDuration: z.string().optional(), // Add validation based on type
+//   availability: z.enum(["available", "unavailable"]),
+//   // images: z.any().optional(), // File validation is more complex
+// });
 
 interface BookFormData {
   title: string;
@@ -15,13 +43,13 @@ interface BookFormData {
   price?: number;
   exchangeFor?: string;
   borrowDuration?: string;
-  images?: FileList | null; // For new uploads
-  existingImages?: string[]; // For displaying existing images in edit mode
+  images?: FileList | null;
+  existingImages?: string[];
   availability: string;
 }
 
 interface BookFormProps {
-  initialData?: BookFormData; // For editing
+  initialData?: BookFormData;
 }
 
 export default function BookForm({ initialData }: BookFormProps) {
@@ -44,9 +72,16 @@ export default function BookForm({ initialData }: BookFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Setup react-hook-form (will integrate with Shadcn Form later)
+  // const form = useForm<z.infer<typeof formSchema>>({
+  //   resolver: zodResolver(formSchema),
+  //   defaultValues: initialData || { ... },
+  // });
+
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
+      // form.reset(initialData); // Reset form with initial data for react-hook-form
     }
   }, [initialData]);
 
@@ -59,12 +94,19 @@ export default function BookForm({ initialData }: BookFormProps) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleSelectChange = (name: keyof BookFormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, images: e.target.files }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Use form.handleSubmit(onSubmitLogic) with react-hook-form
+    // For now, manual submission:
+
     setLoading(true);
     setError(null);
 
@@ -121,23 +163,24 @@ export default function BookForm({ initialData }: BookFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      {/* Shadcn Form */}
+    // Wrap with Shadcn Form component later
+    // <Form {...form}>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Shadcn FormField for each input */}
       <div>
         <label htmlFor="title">Title</label>
-        {/* Shadcn Input */}
-        <input
+        <Input
           id="title"
           name="title"
           value={formData.title}
           onChange={handleChange}
           required
         />
+        {/* <FormMessage /> */}
       </div>
       <div>
         <label htmlFor="author">Author</label>
-        {/* Shadcn Input */}
-        <input
+        <Input
           id="author"
           name="author"
           value={formData.author}
@@ -147,8 +190,7 @@ export default function BookForm({ initialData }: BookFormProps) {
       </div>
       <div>
         <label htmlFor="description">Description</label>
-        {/* Shadcn Textarea */}
-        <textarea
+        <Textarea
           id="description"
           name="description"
           value={formData.description}
@@ -159,42 +201,48 @@ export default function BookForm({ initialData }: BookFormProps) {
       <div>
         <label htmlFor="condition">Condition</label>
         {/* Shadcn Select */}
-        <select
-          id="condition"
-          name="condition"
+        <Select
           value={formData.condition}
-          onChange={handleChange}
+          onValueChange={(value) => handleSelectChange("condition", value)}
           required
         >
-          <option value="">Select condition</option>
-          <option value="new">New</option>
-          <option value="like new">Like New</option>
-          <option value="good">Good</option>
-          <option value="fair">Fair</option>
-          <option value="poor">Poor</option>
-        </select>
+          <SelectTrigger>
+            <SelectValue placeholder="Select condition" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="new">New</SelectItem>
+            <SelectItem value="like new">Like New</SelectItem>
+            <SelectItem value="good">Good</SelectItem>
+            <SelectItem value="fair">Fair</SelectItem>
+            <SelectItem value="poor">Poor</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div>
         <label htmlFor="type">Listing Type</label>
         {/* Shadcn Select */}
-        <select
-          id="type"
-          name="type"
+        <Select
           value={formData.type}
-          onChange={handleChange}
+          onValueChange={(value: "exchange" | "sell" | "borrow") =>
+            handleSelectChange("type", value)
+          }
           required
         >
-          <option value="sell">Sell</option>
-          <option value="exchange">Exchange</option>
-          <option value="borrow">Borrow</option>
-        </select>
+          <SelectTrigger>
+            <SelectValue placeholder="Select type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sell">Sell</SelectItem>
+            <SelectItem value="exchange">Exchange</SelectItem>
+            <SelectItem value="borrow">Borrow</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {formData.type === "sell" && (
         <div>
           <label htmlFor="price">Price</label>
-          {/* Shadcn Input */}
-          <input
+          <Input
             id="price"
             name="price"
             type="number"
@@ -207,8 +255,7 @@ export default function BookForm({ initialData }: BookFormProps) {
       {formData.type === "exchange" && (
         <div>
           <label htmlFor="exchangeFor">Exchange For</label>
-          {/* Shadcn Input */}
-          <input
+          <Input
             id="exchangeFor"
             name="exchangeFor"
             value={formData.exchangeFor || ""}
@@ -220,8 +267,7 @@ export default function BookForm({ initialData }: BookFormProps) {
       {formData.type === "borrow" && (
         <div>
           <label htmlFor="borrowDuration">Borrow Duration</label>
-          {/* Shadcn Input */}
-          <input
+          <Input
             id="borrowDuration"
             name="borrowDuration"
             value={formData.borrowDuration || ""}
@@ -233,8 +279,7 @@ export default function BookForm({ initialData }: BookFormProps) {
 
       <div>
         <label htmlFor="images">Images</label>
-        {/* File Input */}
-        <input
+        <Input
           id="images"
           name="images"
           type="file"
@@ -256,27 +301,30 @@ export default function BookForm({ initialData }: BookFormProps) {
       <div>
         <label htmlFor="availability">Availability</label>
         {/* Shadcn Select */}
-        <select
-          id="availability"
-          name="availability"
+        <Select
           value={formData.availability}
-          onChange={handleChange}
+          onValueChange={(value) => handleSelectChange("availability", value)}
           required
         >
-          <option value="available">Available</option>
-          <option value="unavailable">Unavailable</option>
-        </select>
+          <SelectTrigger>
+            <SelectValue placeholder="Select availability" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="available">Available</SelectItem>
+            <SelectItem value="unavailable">Unavailable</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <ErrorMessage error={error} />
-      {/* Shadcn Button */}
-      <button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading}>
         {loading
           ? "Saving..."
           : initialData
           ? "Update Listing"
           : "Create Listing"}
-      </button>
+      </Button>
     </form>
+    // </Form>
   );
 }
