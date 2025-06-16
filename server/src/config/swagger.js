@@ -52,9 +52,65 @@ const options = {
             role: { type: "string", example: "user" },
             name: { type: "string", example: "John Doe", nullable: true },
             area: { type: "string", example: "Dhanmondi", nullable: true },
+            profileImageUrl: {
+              type: "string",
+              example: "http://example.com/image.jpg",
+              nullable: true,
+            },
+            averageRating: { type: "number", example: 4.5 },
+            totalReviews: { type: "integer", example: 10 },
           },
         },
-        // Add other schemas as you implement modules (Book, Transaction, etc.)
+        Book: {
+          // Book schema
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "60f7b3b3b3b3b3b3b3b3b3b4" },
+            owner: {
+              type: "object", // Or string if not populated
+              $ref: "#/components/schemas/User", // Reference User schema if populated
+            },
+            title: { type: "string", example: "The Hobbit" },
+            author: { type: "string", example: "J.R.R. Tolkien" },
+            edition: { type: "string", example: "Paperback" },
+            condition: {
+              type: "string",
+              enum: ["New", "Like New", "Very Good", "Good", "Acceptable"],
+              example: "Good",
+            },
+            description: {
+              type: "string",
+              example: "A classic fantasy adventure.",
+            },
+            transactionType: {
+              type: "string",
+              enum: ["exchange", "sell", "borrow"],
+              example: "sell",
+            },
+            images: {
+              type: "array",
+              items: { type: "string" },
+              example: ["http://example.com/book1.jpg"],
+            },
+            expectedPrice: { type: "number", example: 350, nullable: true },
+            expectedExchangeBook: {
+              type: "string",
+              example: "Any fantasy novel",
+              nullable: true,
+            },
+            borrowDuration: { type: "integer", example: 14, nullable: true },
+            isAvailable: { type: "boolean", example: true },
+            area: { type: "string", example: "Mirpur" },
+            status: {
+              type: "string",
+              enum: ["active", "pending", "completed", "cancelled"],
+              example: "active",
+            },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        // Add other schemas as you implement modules (Transaction, Chat, etc.)
       },
     },
     security: [

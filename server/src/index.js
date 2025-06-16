@@ -6,8 +6,11 @@ const errorHandler = require("./middlewares/errorHandler");
 const { protect } = require("./middlewares/authMiddleware");
 const { authorize } = require("./middlewares/roleMiddleware");
 
-// Import auth routes
+// Import routes
 const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes"); // Import user routes
+const adminRoutes = require("./routes/adminRoutes"); // Import admin routes
+const bookRoutes = require("./routes/bookRoutes"); // Import book routes
 
 // Import Swagger setup
 const swaggerUi = require("swagger-ui-express");
@@ -46,11 +49,19 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Mount API routes
 app.use("/api/auth", authRoutes); // Mount authentication routes
+app.use("/api/users", userRoutes); // Mount user routes
+app.use("/api/admin/users", adminRoutes); // Mount admin user routes (part of admin module)
+app.use("/api/books", bookRoutes); // Mount book routes
 
 // TODO: Mount other API routes here later, e.g.:
-// app.use('/api/users', protect, require('./routes/userRoutes')); // Example of protected route
-// app.use('/api/admin', protect, authorize('admin'), require('./routes/adminRoutes')); // Example of admin-only route
-// ... etc.
+// app.use('/api/exchange-requests', protect, require('./routes/exchangeRoutes'));
+// app.use('/api/sell-transactions', protect, require('./routes/sellRoutes'));
+// app.use('/api/borrow-requests', protect, require('./routes/borrowRoutes'));
+// app.use('/api/chats', protect, require('./routes/chatRoutes'));
+// app.use('/api/reviews', protect, require('./routes/reviewRoutes'));
+// app.use('/api/notifications', protect, require('./routes/notificationRoutes'));
+// app.use('/api/admin/books', protect, authorize('admin'), require('./routes/adminBookRoutes')); // Example admin book routes
+// app.use('/api/admin/disputes', protect, authorize('admin'), require('./routes/adminDisputeRoutes')); // Example admin dispute routes
 
 // Error Handling Middleware (should be the last middleware)
 app.use(errorHandler);
