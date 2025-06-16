@@ -1,0 +1,41 @@
+[
+  {
+    "phoneNumber": "01700000001",
+    "name": "Admin User",
+    "area": "Dhanmondi",
+    "role": "admin",
+    "isVerified": true,
+    "password": "password123"
+  },
+  {
+    "phoneNumber": "01700000002",
+    "name": "Alice User",
+    "area": "Gulshan",
+    "role": "user",
+    "isVerified": true,
+    "password": "password123"
+  },
+  {
+    "phoneNumber": "01700000003",
+    "name": "Bob User",
+    "area": "Mirpur",
+    "role": "user",
+    "isVerified": true,
+    "password": "password123"
+  },
+  {
+    "phoneNumber": "01700000004",
+    "name": "Charlie User",
+    "area": "Uttara",
+    "role": "user",
+    "isVerified": true,
+    "password": "password123"
+  },
+  {
+    "phoneNumber": "01700000005",
+    "name": "Unverified User",
+    "area": "Dhanmondi",
+    "role": "user",
+    "isVerified": false
+  }
+]

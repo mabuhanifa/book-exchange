@@ -1,0 +1,42 @@
+[
+  {
+    "title": "The Alchemist",
+    "author": "Paulo Coelho",
+    "condition": "Very Good",
+    "description": "A philosophical novel.",
+    "transactionType": "sell",
+    "expectedPrice": 400
+  },
+  {
+    "title": "1984",
+    "author": "George Orwell",
+    "condition": "Good",
+    "description": "Dystopian classic.",
+    "transactionType": "exchange",
+    "expectedExchangeBook": "Any classic literature"
+  },
+  {
+    "title": "To Kill a Mockingbird",
+    "author": "Harper Lee",
+    "condition": "Like New",
+    "description": "Pulitzer Prize winner.",
+    "transactionType": "borrow",
+    "borrowDuration": 14
+  },
+  {
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "condition": "Acceptable",
+    "description": "A novel of manners.",
+    "transactionType": "sell",
+    "expectedPrice": 250
+  },
+  {
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "condition": "New",
+    "description": "A story of the Roaring Twenties.",
+    "transactionType": "exchange",
+    "expectedExchangeBook": "Modern fiction"
+  }
+]

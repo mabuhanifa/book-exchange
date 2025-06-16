@@ -34,39 +34,27 @@ router.use(protect, authorize("admin"));
 /**
  * @swagger
  * tags:
- *   name: Admin - Dashboard
- *   description: Aggregate system statistics for admin dashboard
- *   x-displayName: Dashboard
- *
- * tags:
- *   name: Admin - Users
- *   description: Admin management of user accounts
- *   x-displayName: Users
- *
- * tags:
- *   name: Admin - Books
- *   description: Admin management of book listings
- *   x-displayName: Books
- *
- * tags:
- *   name: Admin - Transactions
- *   description: Admin viewing of all transaction types
- *   x-displayName: Transactions
- *
- * tags:
- *   name: Admin - Disputes
- *   description: Admin management and resolution of disputes
- *   x-displayName: Disputes
- *
- * tags:
- *   name: Admin - Reviews
- *   description: Admin moderation of user reviews
- *   x-displayName: Reviews
- *
- * tags:
- *   name: Admin - System
- *   description: Admin access to system logs and reports
- *   x-displayName: System
+ *   - name: Admin - Dashboard
+ *     description: Aggregate system statistics for admin dashboard
+ *     x-displayName: Dashboard
+ *   - name: Admin - Users
+ *     description: Admin management of user accounts
+ *     x-displayName: Users
+ *   - name: Admin - Books
+ *     description: Admin management of book listings
+ *     x-displayName: Books
+ *   - name: Admin - Transactions
+ *     description: Admin viewing of all transaction types
+ *     x-displayName: Transactions
+ *   - name: Admin - Disputes
+ *     description: Admin management and resolution of disputes
+ *     x-displayName: Disputes
+ *   - name: Admin - Reviews
+ *     description: Admin moderation of user reviews
+ *     x-displayName: Reviews
+ *   - name: Admin - System
+ *     description: Admin access to system logs and reports
+ *     x-displayName: System
  */
 
 // --- Dashboard ---

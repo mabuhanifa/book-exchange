@@ -3,10 +3,11 @@ const {
   getMyNotifications,
   getUnreadCount,
   markNotificationAsRead,
-  markAllNotificationsAsRead,
+  markAllNotificationsAsRead, // Correctly imported from notificationController
   deleteNotification,
 } = require("../controllers/notificationController");
 const { protect } = require("../middlewares/authMiddleware");
+// Removed incorrect import: const { markAllMessagesAsRead } = require("../controllers/chatController");
 
 const router = express.Router();
 
@@ -184,7 +185,7 @@ router.put("/:notificationId/mark-read", markNotificationAsRead);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put("/mark-all-read", markAllMessagesAsRead);
+router.put("/mark-all-read", markAllNotificationsAsRead); // Correct function name
 
 /**
  * @swagger

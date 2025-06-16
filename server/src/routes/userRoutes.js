@@ -4,10 +4,11 @@ const {
   getMyProfile,
   updateMyProfile,
   uploadProfileImage,
-  // Import review functions related to users
+} = require("../controllers/userController");
+const {
   getUserReviews,
   getMyGivenReviews,
-} = require("../controllers/userController");
+} = require("../controllers/reviewController"); // Correct import path for review functions
 const { protect } = require("../middlewares/authMiddleware");
 // const upload = require('../middlewares/uploadMiddleware'); // Assuming Multer or similar
 
@@ -255,7 +256,7 @@ router.post("/me/profile-image", protect, uploadProfileImage); // Placeholder wi
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/:userId/reviews", getUserReviews);
+router.get("/:userId/reviews", getUserReviews); // Correct function is now imported
 
 /**
  * @swagger
@@ -304,7 +305,7 @@ router.get("/:userId/reviews", getUserReviews);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/me/reviews/given", protect, getMyGivenReviews);
+router.get("/me/reviews/given", protect, getMyGivenReviews); // Correct function is now imported
 
 // --- Admin User Management (Placeholder - Full logic in Task 10) ---
 // Note: Admin user routes are in adminRoutes.js
