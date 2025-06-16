@@ -4,6 +4,9 @@ const {
   getMyProfile,
   updateMyProfile,
   uploadProfileImage,
+  // Import review functions related to users
+  getUserReviews,
+  getMyGivenReviews,
 } = require("../controllers/userController");
 const { protect } = require("../middlewares/authMiddleware");
 // const upload = require('../middlewares/uploadMiddleware'); // Assuming Multer or similar
@@ -201,5 +204,109 @@ router.route("/me").get(protect, getMyProfile).put(protect, updateMyProfile);
  */
 // router.post('/me/profile-image', protect, upload.single('profileImage'), uploadProfileImage); // Example with Multer
 router.post("/me/profile-image", protect, uploadProfileImage); // Placeholder without Multer
+
+/**
+ * @swagger
+ * /users/{userId}/reviews:
+ *   get:
+ *     summary: Get reviews received by a specific user
+ *     tags: [Users, Reviews] # Tagged under both Users and Reviews
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         schema: { type: string }
+ *         required: true
+ *         description: ID of the user whose received reviews to get
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: Reviews received by the user retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 count: { type: integer, example: 10 }
+ *                 total: { type: integer, example: 50 }
+ *                 page: { type: integer, example: 1 }
+ *                 pages: { type: integer, example: 5 }
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Review' # Reviews received by this user
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get("/:userId/reviews", getUserReviews);
+
+/**
+ * @swagger
+ * /users/me/reviews/given:
+ *   get:
+ *     summary: Get reviews written by the authenticated user
+ *     tags: [Users, Reviews] # Tagged under both Users and Reviews
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: Reviews written by the user retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean, example: true }
+ *                 count: { type: integer, example: 8 }
+ *                 total: { type: integer, example: 8 }
+ *                 page: { type: integer, example: 1 }
+ *                 pages: { type: integer, example: 1 }
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Review' # Reviews written by this user
+ *       401:
+ *         description: Not authorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get("/me/reviews/given", protect, getMyGivenReviews);
+
+// --- Admin User Management (Placeholder - Full logic in Task 10) ---
+// Note: Admin user routes are in adminRoutes.js
 
 module.exports = router;

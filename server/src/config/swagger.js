@@ -28,7 +28,6 @@ const options = {
         },
       },
       schemas: {
-        // Define reusable schemas here (e.g., ErrorResponse)
         ErrorResponse: {
           type: "object",
           properties: {
@@ -59,6 +58,7 @@ const options = {
             },
             averageRating: { type: "number", example: 4.5 },
             totalReviews: { type: "integer", example: 10 },
+            // Admin might see more fields like isSuspended, etc.
           },
         },
         Book: {
@@ -298,7 +298,218 @@ const options = {
             updatedAt: { type: "string", format: "date-time" },
           },
         },
-        // Add other schemas as you implement modules (Review, Notification, Dispute)
+        Review: {
+          // Review schema
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "60f7b3b3b3b3b3b3b3b3b3bc" },
+            reviewer: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3b3",
+              description: "User ID of the reviewer",
+            }, // Could be populated User object
+            reviewee: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3b7",
+              description: "User ID being reviewed",
+            }, // Could be populated User object
+            transaction: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3b8",
+              description: "ID of the related transaction",
+            },
+            transactionModel: {
+              type: "string",
+              enum: ["ExchangeRequest", "SellTransaction", "BorrowRequest"],
+              example: "SellTransaction",
+            },
+            rating: { type: "integer", example: 5 },
+            comment: {
+              type: "string",
+              example: "Great experience!",
+              nullable: true,
+            },
+            isModerated: { type: "boolean", example: false },
+            moderatedBy: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3bd",
+              nullable: true,
+              description: "Admin User ID who moderated",
+            },
+            moderatedAt: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
+            },
+            moderationReason: { type: "string", nullable: true },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        Notification: {
+          // Notification schema
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "60f7b3b3b3b3b3b3b3b3b3be" },
+            recipient: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3b3",
+              description: "User ID of the recipient",
+            }, // Could be populated User object
+            type: {
+              type: "string",
+              enum: [
+                "new_message",
+                "exchange_request_received",
+                "exchange_request_status_changed",
+                "sell_transaction_initiated",
+                "sell_transaction_status_changed",
+                "sell_transaction_payment_status_changed",
+                "borrow_request_received",
+                "borrow_request_status_changed",
+                "new_review",
+                "admin_message",
+              ],
+              example: "new_message",
+            },
+            entityType: {
+              type: "string",
+              enum: [
+                "Message",
+                "ExchangeRequest",
+                "SellTransaction",
+                "BorrowRequest",
+                "Review",
+                "User",
+                "System",
+              ],
+              example: "Message",
+              nullable: true,
+            },
+            entityId: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3bb",
+              nullable: true,
+              description: "ID of the related entity",
+            },
+            message: {
+              type: "string",
+              example: "You have a new message from John Doe.",
+            },
+            isRead: { type: "boolean", example: false },
+            data: {
+              type: "object",
+              description: "Optional additional data",
+              nullable: true,
+            },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        Dispute: {
+          // Dispute schema
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "60f7b3b3b3b3b3b3b3b3b3bf" },
+            transaction: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3b6",
+              description: "ID of the disputed transaction",
+            },
+            transactionModel: {
+              type: "string",
+              enum: ["ExchangeRequest", "SellTransaction", "BorrowRequest"],
+              example: "ExchangeRequest",
+            },
+            raisedBy: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3b3",
+              description: "User ID who raised the dispute",
+            }, // Could be populated User object
+            participants: {
+              type: "array",
+              items: { type: "string", example: "60f7b3b3b3b3b3b3b3b3b3b3" }, // Array of User IDs
+              description: "Array of participant User IDs",
+            }, // Could be populated User objects
+            reason: {
+              type: "string",
+              example: "Book condition not as described.",
+            },
+            status: {
+              type: "string",
+              enum: ["open", "in_progress", "resolved", "closed"],
+              example: "open",
+            },
+            resolution: {
+              type: "string",
+              example: "Admin ruled in favor of the buyer.",
+              nullable: true,
+            },
+            resolvedBy: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3bd",
+              nullable: true,
+              description: "Admin User ID who resolved",
+            },
+            resolvedAt: { type: "string", format: "date-time", nullable: true },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+      },
+      responses: {
+        // Define reusable responses
+        UnauthorizedError: {
+          description: "Authentication token is missing or invalid",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ErrorResponse",
+              },
+            },
+          },
+        },
+        ForbiddenError: {
+          description:
+            "User does not have the necessary permissions (e.g., not an admin)",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ErrorResponse",
+              },
+            },
+          },
+        },
+        NotFoundError: {
+          description: "Resource not found",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ErrorResponse",
+              },
+            },
+          },
+        },
+        BadRequestError: {
+          description: "Invalid request payload or parameters",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ErrorResponse",
+              },
+            },
+          },
+        },
+        InternalServerError: {
+          description: "Something went wrong on the server",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/ErrorResponse",
+              },
+            },
+          },
+        },
       },
     },
     security: [

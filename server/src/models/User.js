@@ -18,7 +18,11 @@ const userSchema = new mongoose.Schema(
     suspendedReason: { type: String },
     suspendedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Admin user ID
     suspendedAt: { type: Date },
-    averageRating: { type: Number, default: 0 },
+    averageRating: {
+      type: Number,
+      default: 0,
+      set: (v) => parseFloat(v.toFixed(1)),
+    }, // Store with 1 decimal place
     totalReviews: { type: Number, default: 0 },
   },
   { timestamps: true }
@@ -50,6 +54,9 @@ userSchema.pre("save", async function (next) {
   // }
   next();
 });
+
+// No direct hook needed here for rating update, as it's triggered from Review model's post-save hook.
+// The `set` function on `averageRating` ensures formatting.
 
 const User = mongoose.model("User", userSchema);
 

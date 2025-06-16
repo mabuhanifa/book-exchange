@@ -9,12 +9,14 @@ const { authorize } = require("./middlewares/roleMiddleware");
 // Import routes
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes"); // Import user routes
-const adminRoutes = require("./routes/adminRoutes"); // Import admin routes
+const adminRoutes = require("./routes/adminRoutes"); // Import the main admin routes
 const bookRoutes = require("./routes/bookRoutes"); // Import book routes
 const exchangeRoutes = require("./routes/exchangeRoutes");
 const sellRoutes = require("./routes/sellRoutes"); // Import sell routes
 const borrowRoutes = require("./routes/borrowRoutes"); // Import borrow routes
 const chatRoutes = require("./routes/chatRoutes"); // Import chat routes
+const reviewRoutes = require("./routes/reviewRoutes"); // Import review routes
+const notificationRoutes = require("./routes/notificationRoutes");
 
 // Import Swagger setup
 const swaggerUi = require("swagger-ui-express");
@@ -53,19 +55,20 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Mount API routes
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/admin/users", adminRoutes);
+app.use("/api/users", userRoutes); // User profile routes (includes /:userId/reviews and /me/reviews/given)
 app.use("/api/books", bookRoutes);
 app.use("/api/exchange-requests", protect, exchangeRoutes);
 app.use("/api/sell-transactions", protect, sellRoutes);
 app.use("/api/borrow-requests", protect, borrowRoutes);
-app.use("/api/conversations", protect, chatRoutes); // Mount chat routes, protected
+app.use("/api/conversations", protect, chatRoutes);
+app.use("/api/reviews", protect, reviewRoutes); // User-facing review routes (create, get single)
+app.use("/api/notifications", protect, notificationRoutes);
 
-// TODO: Mount other API routes here later, e.g.:
-// app.use('/api/reviews', protect, require('./routes/reviewRoutes'));
-// app.use('/api/notifications', protect, require('./routes/notificationRoutes'));
-// app.use('/api/admin/books', protect, authorize('admin'), require('./routes/adminBookRoutes'));
-// app.use('/api/admin/disputes', protect, authorize('admin'), require('./routes/adminDisputeRoutes'));
+// Mount the main admin routes, protected by auth and role middleware
+app.use("/api/admin", adminRoutes);
+
+// TODO: Add user-facing dispute route (e.g., POST /api/disputes)
+// app.use('/api/disputes', protect, require('./routes/disputeRoutes')); // If using a separate user-facing dispute route
 
 // Error Handling Middleware (should be the last middleware)
 app.use(errorHandler);

@@ -140,99 +140,23 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
   }
 });
 
-// --- Admin User Management (Placeholder - Full logic in Task 10) ---
+// @desc    Get reviews received by a specific user (Public)
+// @route   GET /api/users/:userId/reviews
+// @access  Public
+// NOTE: Implementation is in reviewController.js, imported and used in userRoutes.js
+// const getUserReviews = ...
 
-// @desc    Get a list of all users (Admin only)
-// @route   GET /api/admin/users
-// @access  Private/Admin
-const getAllUsers = asyncHandler(async (req, res) => {
-  // TODO: Implement filtering, searching, pagination
-  const users = await User.find({}).select("-otp -otpExpires -password"); // Exclude sensitive fields
-
-  res.status(200).json({ success: true, count: users.length, data: users });
-});
-
-// @desc    Suspend a user (Admin only)
-// @route   PUT /api/admin/users/:userId/suspend
-// @access  Private/Admin
-const suspendUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.userId);
-  const { reason } = req.body; // Optional reason
-
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found");
-  }
-
-  if (user.role === "admin") {
-    res.status(400);
-    throw new Error("Cannot suspend another admin");
-  }
-
-  if (user.isSuspended) {
-    res.status(400);
-    throw new Error("User is already suspended");
-  }
-
-  user.isSuspended = true;
-  user.suspendedReason = reason || "Suspended by admin";
-  user.suspendedBy = req.user._id; // Admin user ID from auth middleware
-  user.suspendedAt = new Date();
-
-  // TODO: Implement logic to cancel/pause user's active transactions, hide their listings, etc.
-
-  await user.save();
-
-  res
-    .status(200)
-    .json({
-      success: true,
-      message: `User ${user.phoneNumber} suspended`,
-      data: user,
-    });
-});
-
-// @desc    Restore a user (Admin only)
-// @route   PUT /api/admin/users/:userId/restore
-// @access  Private/Admin
-const restoreUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.userId);
-
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found");
-  }
-
-  if (!user.isSuspended) {
-    res.status(400);
-    throw new Error("User is not suspended");
-  }
-
-  user.isSuspended = false;
-  user.suspendedReason = undefined;
-  user.suspendedBy = undefined;
-  user.suspendedAt = undefined;
-
-  // TODO: Implement logic to potentially reactivate user's listings or transactions if appropriate
-
-  await user.save();
-
-  res
-    .status(200)
-    .json({
-      success: true,
-      message: `User ${user.phoneNumber} restored`,
-      data: user,
-    });
-});
+// @desc    Get reviews written by the authenticated user (Private)
+// @route   GET /api/users/me/reviews/given
+// @access  Private
+// NOTE: Implementation is in reviewController.js, imported and used in userRoutes.js
+// const getMyGivenReviews = ...
 
 module.exports = {
   getUserProfile,
   getMyProfile,
   updateMyProfile,
   uploadProfileImage,
-  // Admin functions
-  getAllUsers,
-  suspendUser,
-  restoreUser,
+  // Admin functions moved to adminController.js
+  // Review functions related to users are in reviewController.js
 };
