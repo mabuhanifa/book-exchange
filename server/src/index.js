@@ -11,6 +11,7 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes"); // Import user routes
 const adminRoutes = require("./routes/adminRoutes"); // Import admin routes
 const bookRoutes = require("./routes/bookRoutes"); // Import book routes
+const exchangeRoutes = require("./routes/exchangeRoutes"); // Import exchange routes
 
 // Import Swagger setup
 const swaggerUi = require("swagger-ui-express");
@@ -52,9 +53,9 @@ app.use("/api/auth", authRoutes); // Mount authentication routes
 app.use("/api/users", userRoutes); // Mount user routes
 app.use("/api/admin/users", adminRoutes); // Mount admin user routes (part of admin module)
 app.use("/api/books", bookRoutes); // Mount book routes
+app.use("/api/exchange-requests", protect, exchangeRoutes); // Mount exchange routes, protected
 
 // TODO: Mount other API routes here later, e.g.:
-// app.use('/api/exchange-requests', protect, require('./routes/exchangeRoutes'));
 // app.use('/api/sell-transactions', protect, require('./routes/sellRoutes'));
 // app.use('/api/borrow-requests', protect, require('./routes/borrowRoutes'));
 // app.use('/api/chats', protect, require('./routes/chatRoutes'));

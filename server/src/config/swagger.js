@@ -110,7 +110,54 @@ const options = {
             updatedAt: { type: "string", format: "date-time" },
           },
         },
-        // Add other schemas as you implement modules (Transaction, Chat, etc.)
+        ExchangeRequest: {
+          // ExchangeRequest schema
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "60f7b3b3b3b3b3b3b3b3b3b6" },
+            requester: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3b3",
+              description: "User ID of the requester",
+            }, // Could be populated User object
+            requesterBook: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3b4",
+              description: "Book ID offered by requester",
+            }, // Could be populated Book object
+            owner: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3b7",
+              description: "User ID of the owner",
+            }, // Could be populated User object
+            ownerBook: {
+              type: "string",
+              example: "60f7b3b3b3b3b3b3b3b3b3b5",
+              description: "Book ID requested from owner",
+            }, // Could be populated Book object
+            status: {
+              type: "string",
+              enum: [
+                "pending",
+                "accepted",
+                "rejected",
+                "cancelled",
+                "completed",
+              ],
+              example: "pending",
+            },
+            message: {
+              type: "string",
+              example: "Interested in exchanging!",
+              nullable: true,
+            },
+            requesterConfirmedCompletion: { type: "boolean", example: false },
+            ownerConfirmedCompletion: { type: "boolean", example: false },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        // Add other schemas as you implement modules (SellTransaction, BorrowRequest, Chat, etc.)
       },
     },
     security: [
