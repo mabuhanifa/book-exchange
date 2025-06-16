@@ -3,8 +3,15 @@ require("dotenv").config(); // Load environment variables from .env file
 const express = require("express");
 const mongoose = require("mongoose");
 const errorHandler = require("./middlewares/errorHandler");
-// const { protect } = require('./middlewares/authMiddleware'); // Uncomment when ready
-// const { authorize } = require('./middlewares/roleMiddleware'); // Uncomment when ready
+const { protect } = require("./middlewares/authMiddleware");
+const { authorize } = require("./middlewares/roleMiddleware");
+
+// Import auth routes
+const authRoutes = require("./routes/authRoutes");
+
+// Import Swagger setup
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,8 +41,13 @@ app.get("/", (req, res) => {
   res.send("Dhaka Local Book Exchange Marketplace Backend is running!");
 });
 
-// TODO: Mount your API routes here later, e.g.:
-// app.use('/api/auth', require('./routes/authRoutes'));
+// Swagger Documentation Route
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Mount API routes
+app.use("/api/auth", authRoutes); // Mount authentication routes
+
+// TODO: Mount other API routes here later, e.g.:
 // app.use('/api/users', protect, require('./routes/userRoutes')); // Example of protected route
 // app.use('/api/admin', protect, authorize('admin'), require('./routes/adminRoutes')); // Example of admin-only route
 // ... etc.

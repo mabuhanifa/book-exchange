@@ -1,6 +1,6 @@
 // Placeholder for JWT Authentication Middleware
 const jwt = require("jsonwebtoken");
-const User = require("../models/User"); // Assuming User model path
+const User = require("../models/User"); // Corrected path
 
 const protect = async (req, res, next) => {
   let token;
@@ -16,8 +16,10 @@ const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Attach user from token payload (excluding password)
-      req.user = await User.findById(decoded.id).select("-password");
+      // Attach user from token payload (excluding password and OTP fields)
+      req.user = await User.findById(decoded.id).select(
+        "-password -otp -otpExpires"
+      );
 
       if (!req.user) {
         res
@@ -26,12 +28,31 @@ const protect = async (req, res, next) => {
         return; // Stop execution
       }
 
+      // Check if user is suspended
+      if (req.user.isSuspended) {
+        res
+          .status(403)
+          .json({ success: false, error: "Your account has been suspended." });
+        return; // Stop execution
+      }
+
       next();
     } catch (error) {
       console.error(error);
-      res
-        .status(401)
-        .json({ success: false, error: "Not authorized, token failed" });
+      // Handle specific JWT errors
+      if (error.name === "TokenExpiredError") {
+        res
+          .status(401)
+          .json({ success: false, error: "Not authorized, token expired" });
+      } else if (error.name === "JsonWebTokenError") {
+        res
+          .status(401)
+          .json({ success: false, error: "Not authorized, invalid token" });
+      } else {
+        res
+          .status(401)
+          .json({ success: false, error: "Not authorized, token failed" });
+      }
     }
   }
 
