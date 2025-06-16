@@ -10,42 +10,86 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import axios from "axios"; // Use axios for client-side requests
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import ErrorMessage from "./ui/ErrorMessage";
 
-// Import react-hook-form and zod for validation later
-// import { useForm } from 'react-hook-form';
-// import { zodResolver } from '@hookform/resolvers/zod';
-// import * as z from 'zod';
+// Import react-hook-form and zod for validation
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
-// Define a basic schema (will be used with Zod later)
-// const formSchema = z.object({
-//   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
-//   author: z.string().min(2, { message: "Author must be at least 2 characters." }),
-//   description: z.string().min(10, { message: "Description must be at least 10 characters." }),
-//   condition: z.enum(["new", "like new", "good", "fair", "poor"]),
-//   type: z.enum(["exchange", "sell", "borrow"]),
-//   price: z.number().optional(), // Add validation based on type
-//   exchangeFor: z.string().optional(), // Add validation based on type
-//   borrowDuration: z.string().optional(), // Add validation based on type
-//   availability: z.enum(["available", "unavailable"]),
-//   // images: z.any().optional(), // File validation is more complex
-// });
+// Define the Zod schema for book data
+const formSchema = z.object({
+  title: z.string().min(2, { message: "Title must be at least 2 characters." }),
+  author: z
+    .string()
+    .min(2, { message: "Author must be at least 2 characters." }),
+  description: z
+    .string()
+    .min(10, { message: "Description must be at least 10 characters." }),
+  condition: z.enum(["new", "like new", "good", "fair", "poor"], {
+    errorMap: () => ({ message: "Please select a valid condition." }),
+  }),
+  type: z.enum(["exchange", "sell", "borrow"], {
+    errorMap: () => ({ message: "Please select a valid listing type." }),
+  }),
+  price: z.preprocess(
+    (val) => (val === "" ? undefined : Number(val)),
+    z
+      .number()
+      .positive({ message: "Price must be a positive number." })
+      .optional()
+  ),
+  exchangeFor: z.string().optional(),
+  borrowDuration: z.string().optional(),
+  availability: z.enum(["available", "unavailable"], {
+    errorMap: () => ({ message: "Please select availability status." }),
+  }),
+  // File validation is more complex and often handled outside Zod or with custom refinements
+  // images: z.any().optional(),
+});
 
-interface BookFormData {
-  title: string;
-  author: string;
-  description: string;
-  condition: string;
-  type: "exchange" | "sell" | "borrow";
-  price?: number;
-  exchangeFor?: string;
-  borrowDuration?: string;
+// Refine schema based on type
+const refinedFormSchema = formSchema.superRefine((data, ctx) => {
+  if (
+    data.type === "sell" &&
+    (data.price === undefined || data.price === null)
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Price is required for 'Sell' listings.",
+      path: ["price"],
+    });
+  }
+  if (
+    data.type === "exchange" &&
+    (!data.exchangeFor || data.exchangeFor.trim() === "")
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "'Exchange For' is required for 'Exchange' listings.",
+      path: ["exchangeFor"],
+    });
+  }
+  if (
+    data.type === "borrow" &&
+    (!data.borrowDuration || data.borrowDuration.trim() === "")
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "'Borrow Duration' is required for 'Borrow' listings.",
+      path: ["borrowDuration"],
+    });
+  }
+});
+
+type BookFormValues = z.infer<typeof refinedFormSchema>;
+
+interface BookFormData extends BookFormValues {
   images?: FileList | null;
   existingImages?: string[];
-  availability: string;
 }
 
 interface BookFormProps {
@@ -54,85 +98,84 @@ interface BookFormProps {
 
 export default function BookForm({ initialData }: BookFormProps) {
   const router = useRouter();
-  const [formData, setFormData] = useState<BookFormData>(
-    initialData || {
-      title: "",
-      author: "",
-      description: "",
-      condition: "",
-      type: "sell",
-      price: undefined,
-      exchangeFor: undefined,
-      borrowDuration: undefined,
-      images: null,
-      existingImages: [],
-      availability: "available",
-    }
-  );
+  const [images, setImages] = useState<FileList | null>(null); // Manage files separately
+  const [existingImages, setExistingImages] = useState<string[]>(
+    initialData?.existingImages || []
+  ); // Manage existing images separately
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null); // For backend errors
 
-  // Setup react-hook-form (will integrate with Shadcn Form later)
-  // const form = useForm<z.infer<typeof formSchema>>({
-  //   resolver: zodResolver(formSchema),
-  //   defaultValues: initialData || { ... },
-  // });
+  // Setup react-hook-form
+  const form = useForm<BookFormValues>({
+    resolver: zodResolver(refinedFormSchema),
+    defaultValues: {
+      title: initialData?.title || "",
+      author: initialData?.author || "",
+      description: initialData?.description || "",
+      condition: initialData?.condition || "",
+      type: initialData?.type || "sell",
+      price: initialData?.price,
+      exchangeFor: initialData?.exchangeFor,
+      borrowDuration: initialData?.borrowDuration,
+      availability: initialData?.availability || "available",
+    },
+    mode: "onChange", // Validate on change
+  });
+
+  // Watch the 'type' field to conditionally require other fields
+  const listingType = form.watch("type");
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
-      // form.reset(initialData); // Reset form with initial data for react-hook-form
+      form.reset({
+        title: initialData.title,
+        author: initialData.author,
+        description: initialData.description,
+        condition: initialData.condition,
+        type: initialData.type,
+        price: initialData.price,
+        exchangeFor: initialData.exchangeFor,
+        borrowDuration: initialData.borrowDuration,
+        availability: initialData.availability,
+      });
+      setExistingImages(initialData.existingImages || []);
     }
-  }, [initialData]);
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: keyof BookFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  }, [initialData, form]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, images: e.target.files }));
+    setImages(e.target.files);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Use form.handleSubmit(onSubmitLogic) with react-hook-form
-    // For now, manual submission:
-
+  const onSubmit = async (values: BookFormValues) => {
     setLoading(true);
-    setError(null);
+    setApiError(null);
 
-    // Prepare data for submission
     const dataToSubmit = new FormData();
-    dataToSubmit.append("title", formData.title);
-    dataToSubmit.append("author", formData.author);
-    dataToSubmit.append("description", formData.description);
-    dataToSubmit.append("condition", formData.condition);
-    dataToSubmit.append("type", formData.type);
-    if (formData.type === "sell" && formData.price !== undefined)
-      dataToSubmit.append("price", formData.price.toString());
-    if (formData.type === "exchange" && formData.exchangeFor)
-      dataToSubmit.append("exchangeFor", formData.exchangeFor);
-    if (formData.type === "borrow" && formData.borrowDuration)
-      dataToSubmit.append("borrowDuration", formData.borrowDuration);
-    dataToSubmit.append("availability", formData.availability);
+    dataToSubmit.append("title", values.title);
+    dataToSubmit.append("author", values.author);
+    dataToSubmit.append("description", values.description);
+    dataToSubmit.append("condition", values.condition);
+    dataToSubmit.append("type", values.type);
+    if (
+      values.type === "sell" &&
+      values.price !== undefined &&
+      values.price !== null
+    )
+      dataToSubmit.append("price", values.price.toString());
+    if (values.type === "exchange" && values.exchangeFor)
+      dataToSubmit.append("exchangeFor", values.exchangeFor);
+    if (values.type === "borrow" && values.borrowDuration)
+      dataToSubmit.append("borrowDuration", values.borrowDuration);
+    dataToSubmit.append("availability", values.availability);
 
     // Append new images
-    if (formData.images) {
-      for (let i = 0; i < formData.images.length; i++) {
-        dataToSubmit.append("images", formData.images[i]);
+    if (images) {
+      for (let i = 0; i < images.length; i++) {
+        dataToSubmit.append("images", images[i]);
       }
     }
     // For editing, you might need to send which existing images to keep/remove
-    // dataToSubmit.append('existingImages', JSON.stringify(formData.existingImages));
+    // dataToSubmit.append('existingImages', JSON.stringify(existingImages));
 
     const url = initialData
       ? `/api/proxy/books/${initialData.id}`
@@ -140,21 +183,18 @@ export default function BookForm({ initialData }: BookFormProps) {
     const method = initialData ? "put" : "post";
 
     try {
-      // Use axios to call the Next.js proxy API route
       const response = await axios({
         method,
         url,
         data: dataToSubmit,
-        // Note: axios automatically sets Content-Type for FormData
-        // You might need an interceptor here or in a wrapper to handle 401s for token refresh
+        // axios automatically sets Content-Type for FormData
       });
 
       console.log("Book saved successfully:", response.data);
-      // Redirect on success
-      router.push(`/books/${response.data.id}`); // Assuming the response includes the new/updated book ID
+      router.push(`/books/${response.data.id}`);
     } catch (err: any) {
       console.error("Failed to save book:", err);
-      setError(
+      setApiError(
         err.response?.data?.message || err.message || "An error occurred"
       );
     } finally {
@@ -163,168 +203,218 @@ export default function BookForm({ initialData }: BookFormProps) {
   };
 
   return (
-    // Wrap with Shadcn Form component later
-    // <Form {...form}>
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Shadcn FormField for each input */}
-      <div>
-        <label htmlFor="title">Title</label>
-        <Input
-          id="title"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
           name="title"
-          value={formData.title}
-          onChange={handleChange}
-          required
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Book Title" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {/* <FormMessage /> */}
-      </div>
-      <div>
-        <label htmlFor="author">Author</label>
-        <Input
-          id="author"
+        <FormField
+          control={form.control}
           name="author"
-          value={formData.author}
-          onChange={handleChange}
-          required
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Author</FormLabel>
+              <FormControl>
+                <Input placeholder="Book Author" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div>
-        <label htmlFor="description">Description</label>
-        <Textarea
-          id="description"
+        <FormField
+          control={form.control}
           name="description"
-          value={formData.description}
-          onChange={handleChange}
-          required
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Book Description" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      <div>
-        <label htmlFor="condition">Condition</label>
-        {/* Shadcn Select */}
-        <Select
-          value={formData.condition}
-          onValueChange={(value) => handleSelectChange("condition", value)}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select condition" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="new">New</SelectItem>
-            <SelectItem value="like new">Like New</SelectItem>
-            <SelectItem value="good">Good</SelectItem>
-            <SelectItem value="fair">Fair</SelectItem>
-            <SelectItem value="poor">Poor</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <label htmlFor="type">Listing Type</label>
-        {/* Shadcn Select */}
-        <Select
-          value={formData.type}
-          onValueChange={(value: "exchange" | "sell" | "borrow") =>
-            handleSelectChange("type", value)
-          }
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="sell">Sell</SelectItem>
-            <SelectItem value="exchange">Exchange</SelectItem>
-            <SelectItem value="borrow">Borrow</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        <FormField
+          control={form.control}
+          name="condition"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Condition</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select condition" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="like new">Like New</SelectItem>
+                  <SelectItem value="good">Good</SelectItem>
+                  <SelectItem value="fair">Fair</SelectItem>
+                  <SelectItem value="poor">Poor</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Listing Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="sell">Sell</SelectItem>
+                  <SelectItem value="exchange">Exchange</SelectItem>
+                  <SelectItem value="borrow">Borrow</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      {formData.type === "sell" && (
-        <div>
-          <label htmlFor="price">Price</label>
-          <Input
-            id="price"
+        {listingType === "sell" && (
+          <FormField
+            control={form.control}
             name="price"
-            type="number"
-            value={formData.price || ""}
-            onChange={handleChange}
-            required
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="Price"
+                    {...field}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
+                      )
+                    }
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-      )}
-      {formData.type === "exchange" && (
-        <div>
-          <label htmlFor="exchangeFor">Exchange For</label>
-          <Input
-            id="exchangeFor"
+        )}
+        {listingType === "exchange" && (
+          <FormField
+            control={form.control}
             name="exchangeFor"
-            value={formData.exchangeFor || ""}
-            onChange={handleChange}
-            required
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Exchange For</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="e.g., Fantasy books, similar value"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-      )}
-      {formData.type === "borrow" && (
-        <div>
-          <label htmlFor="borrowDuration">Borrow Duration</label>
-          <Input
-            id="borrowDuration"
+        )}
+        {listingType === "borrow" && (
+          <FormField
+            control={form.control}
             name="borrowDuration"
-            value={formData.borrowDuration || ""}
-            onChange={handleChange}
-            required
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Borrow Duration</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., 1 week, 1 month" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
+        )}
+
+        <div>
+          {" "}
+          {/* Manual file input for now */}
+          <label
+            htmlFor="images"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Images
+          </label>
+          <Input
+            id="images"
+            name="images"
+            type="file"
+            multiple
+            onChange={handleFileChange}
+          />
+          {existingImages.length > 0 && (
+            <div className="mt-2">
+              <p className="text-sm font-medium">Existing Images:</p>
+              <div className="flex space-x-2 overflow-x-auto">
+                {existingImages.map((img, index) => (
+                  <img
+                    key={index}
+                    src={img}
+                    alt={`Existing image ${index + 1}`}
+                    className="w-20 h-20 object-cover rounded-md"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
 
-      <div>
-        <label htmlFor="images">Images</label>
-        <Input
-          id="images"
-          name="images"
-          type="file"
-          multiple
-          onChange={handleFileChange}
+        <FormField
+          control={form.control}
+          name="availability"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Availability</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select availability" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="unavailable">Unavailable</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {/* Display existing images if in edit mode */}
-        {formData.existingImages &&
-          formData.existingImages.map((img, index) => (
-            <img
-              key={index}
-              src={img}
-              alt={`Existing image ${index + 1}`}
-              className="w-20 h-20 object-cover mr-2"
-            />
-          ))}
-      </div>
 
-      <div>
-        <label htmlFor="availability">Availability</label>
-        {/* Shadcn Select */}
-        <Select
-          value={formData.availability}
-          onValueChange={(value) => handleSelectChange("availability", value)}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select availability" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="available">Available</SelectItem>
-            <SelectItem value="unavailable">Unavailable</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <ErrorMessage error={error} />
-      <Button type="submit" disabled={loading}>
-        {loading
-          ? "Saving..."
-          : initialData
-          ? "Update Listing"
-          : "Create Listing"}
-      </Button>
-    </form>
-    // </Form>
+        <ErrorMessage error={apiError} />
+        <Button type="submit" disabled={loading}>
+          {loading
+            ? "Saving..."
+            : initialData
+            ? "Update Listing"
+            : "Create Listing"}
+        </Button>
+      </form>
+    </Form>
   );
 }

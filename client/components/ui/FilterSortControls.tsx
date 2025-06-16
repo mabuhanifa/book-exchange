@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface FilterOption {
   key: string;
@@ -29,6 +29,7 @@ interface FilterSortControlsProps {
   availableSorts: SortOption[];
   currentFilters: Record<string, any>; // Replace 'any'
   currentSort: { key: string; direction: "asc" | "desc" } | null;
+  currentSearch: string; // Add current search query prop
   onFilterChange: (filters: Record<string, any>) => void; // Replace 'any'
   onSortChange: (
     sort: { key: string; direction: "asc" | "desc" } | null
@@ -41,13 +42,20 @@ export default function FilterSortControls({
   availableSorts,
   currentFilters,
   currentSort,
+  currentSearch,
   onFilterChange,
   onSortChange,
   onSearch,
 }: FilterSortControlsProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(currentSearch);
+
+  // Update local search query state when currentSearch prop changes (e.g., from URL)
+  useEffect(() => {
+    setSearchQuery(currentSearch);
+  }, [currentSearch]);
 
   const handleFilterInputChange = (key: string, value: any) => {
+    // Pass the updated filters object back
     onFilterChange({ ...currentFilters, [key]: value });
   };
 
@@ -56,6 +64,7 @@ export default function FilterSortControls({
     if (currentSort?.key === key) {
       direction = currentSort.direction === "asc" ? "desc" : "asc";
     }
+    // Pass the updated sort object back
     onSortChange({ key, direction });
   };
 
@@ -66,23 +75,30 @@ export default function FilterSortControls({
     }
   };
 
+  // Allow pressing Enter in search input to trigger search
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearchSubmit(e as any); // Cast to any to match FormEvent
+    }
+  };
+
   return (
     <div className="flex flex-wrap gap-4 p-4 border-b mb-4">
       {onSearch && (
-        <form
-          onSubmit={handleSearchSubmit}
-          className="flex items-center space-x-2"
-        >
+        <div className="flex items-center space-x-2">
           <Input
             type="text"
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchKeyDown} // Add key down handler
+            className="w-auto"
           />
-          <Button type="submit" size="sm">
+          <Button type="button" size="sm" onClick={handleSearchSubmit}>
             Search
-          </Button>
-        </form>
+          </Button>{" "}
+          {/* Use type="button" to prevent form submission */}
+        </div>
       )}
 
       {availableFilters.map((filter) => (
